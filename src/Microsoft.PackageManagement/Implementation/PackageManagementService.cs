@@ -28,7 +28,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
     using System.IO;
     using System.Linq;
     using System.Management.Automation;
-    //using System.Management.Automation.Runspaces;
+    using System.Management.Automation.Runspaces;
     using System.Reflection;
     using System.Security.AccessControl;
     using Utility.Collections;
@@ -78,15 +78,17 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
         internal Dictionary<string, List<PackageProvider>> ProviderCacheTable => _providerCacheTable;
 
-        internal static string CurrentAssemblyLocation => Assembly.GetExecutingAssembly().Location;
+        internal static string CurrentAssemblyLocation =>
 
-        /*
+        //Assembly.GetAssembly(typeof(PackageManagementService)).Location;
+        AppDomain.CurrentDomain.BaseDirectory;
+
 #if !CORECLR
-        Assembly.GetExecutingAssembly().Location;
+        //Assembly.GetExecutingAssembly().Location;
 #else
-        return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+        typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 #endif
-        */
+        //return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 
         internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
 

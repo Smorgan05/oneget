@@ -357,8 +357,11 @@ namespace Microsoft.PackageManagement.Internal.Utility.Extensions
                 formatString = new Regex(@"\$\{(?<macro>\w*?)\}").Replace(formatString, new MatchEvaluator((m) =>
                 {
                     string key = m.Groups["macro"].Value;
+                    //Type myType = args[0].GetType();
 
                     System.Reflection.PropertyInfo p = args[0].GetType().GetProperty(key);
+                    //System.Reflection.PropertyInfo p = myType.GetProperty(key);
+
                     if (p != null)
                     {
                         replacedByName = true;
