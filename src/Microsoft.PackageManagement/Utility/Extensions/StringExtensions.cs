@@ -343,6 +343,7 @@ namespace Microsoft.PackageManagement.Internal.Utility.Extensions
         /// <returns> </returns>
         /// <remarks>
         /// </remarks>
+        // TODO: Needs fixing
         public static string format(this string formatString, params object[] args)
         {
             if (args == null || args.Length == 0)
@@ -359,6 +360,7 @@ namespace Microsoft.PackageManagement.Internal.Utility.Extensions
                     string key = m.Groups["macro"].Value;
                     //Type myType = args[0].GetType();
 
+                    // TODO: This area doesn't compile properly
                     System.Reflection.PropertyInfo p = args[0].GetType().GetProperty(key);
                     //System.Reflection.PropertyInfo p = myType.GetProperty(key);
 

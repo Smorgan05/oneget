@@ -80,6 +80,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
         internal Dictionary<string, List<PackageProvider>> ProviderCacheTable => _providerCacheTable;
 
+        //TODO Needs Fixing
         internal static string CurrentAssemblyLocation =>
 
         //Assembly.GetAssembly(typeof(PackageManagementService)).Location;
@@ -91,6 +92,8 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 #endif
         //return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+
+        //TODO End of Fixing
 
         // Replaced with private readonly string above
         //internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
