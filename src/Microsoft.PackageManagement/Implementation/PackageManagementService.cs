@@ -15,10 +15,10 @@
 namespace Microsoft.PackageManagement.Internal.Implementation
 {
     using Api;
-    using Providers;
     using PackageManagement.Implementation;
     using PackageManagement.Packaging;
     using Packaging;
+    using Providers;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -28,7 +28,6 @@ namespace Microsoft.PackageManagement.Internal.Implementation
     using System.IO;
     using System.Linq;
     using System.Management.Automation;
-    using System.Management.Automation.Runspaces;
     using System.Reflection;
     using System.Security.AccessControl;
     using Utility.Collections;
@@ -66,8 +65,10 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         internal readonly IDictionary<string, Downloader> Downloaders = new Dictionary<string, Downloader>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, List<PackageProvider>> _providerCacheTable = new Dictionary<string, List<PackageProvider>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, byte[]> _providerFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+
         //private string _baseDir;
         internal bool InternalPackageManagementInstallOnly = false;
+
         private readonly string _nuget = "NuGet";
         private readonly string BaseDir = Path.GetDirectoryName(CurrentAssemblyLocation);
 
@@ -538,7 +539,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
                 LoadProviderAssembly(request, providerAssemblyName, false);
             });
 
-            var powerShellMetaProvider = GetMetaProviderObject(request);
+            IMetaProvider powerShellMetaProvider = GetMetaProviderObject(request);
             if (powerShellMetaProvider == null)
             {
                 return;
@@ -821,14 +822,14 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             request.Debug(string.Format(CultureInfo.CurrentCulture, "Calling ImportPowerShellProvider. providerName = '{0}', requiredVersion='{1}'",
                 modulePath, requiredVersion));
 
-            var powerShellMetaProvider = GetMetaProviderObject(request);
+            IMetaProvider powerShellMetaProvider = GetMetaProviderObject(request);
             if (powerShellMetaProvider == null)
             {
                 yield break;
             }
 
             //providerName can be a file path or name.
-            var instances = powerShellMetaProvider.LoadAvailableProvider(request.As<IRequest>(), modulePath, requiredVersion, shouldRefreshCache).ReEnumerable();
+            MutableEnumerable<object> instances = powerShellMetaProvider.LoadAvailableProvider(request.As<IRequest>(), modulePath, requiredVersion, shouldRefreshCache).ReEnumerable();
 
             if (!instances.Any())
             {
@@ -838,7 +839,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
                 yield break;
             }
 
-            foreach (var instance in instances)
+            foreach (object instance in instances)
             {
                 //Register the provider
                 PackageProvider provider = instances.As<PackageProvider>();
@@ -869,7 +870,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             //retrieve the powershell metaprovider object
             if (_metaProviders.ContainsKey("PowerShell"))
             {
-                var powerShellMetaProvider = _metaProviders["PowerShell"];
+                IMetaProvider powerShellMetaProvider = _metaProviders["PowerShell"];
                 if (powerShellMetaProvider != null)
                 {
                     return powerShellMetaProvider;
@@ -1190,7 +1191,6 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
             // add inbox assemblies (don't require manifests, because they are versioned with the core)
             providerAssemblies = providerAssemblies.Concat(new[] {
-
                 Path.Combine(BaseDir, "Microsoft.PackageManagement.MetaProvider.PowerShell.dll"),
                 Path.Combine(BaseDir, "Microsoft.PackageManagement.ArchiverProviders.dll"),
                 Path.Combine(BaseDir, "Microsoft.PackageManagement.CoreProviders.dll"),
@@ -1517,41 +1517,10 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             return found;
         }
 
-        // TODO: Simplify This!
         private static FourPartVersion GetAssemblyVersion(Assembly asm)
         {
             FourPartVersion result = 0;
             result = asm.GetName().Version;
-
-            if (result == 0)
-            {
-                // what? No assembly version?
-                // fallback to the file version of the assembly
-#if !CORECLR
-                string assemblyLocation = asm.Location;
-#else
-                var assemblyLocation = asm.ManifestModule.FullyQualifiedName;
-#endif
-
-                if (!string.IsNullOrWhiteSpace(assemblyLocation) && File.Exists(assemblyLocation))
-                {
-                    result = FileVersionInfo.GetVersionInfo(assemblyLocation);
-                }
-                else if (result == 0)
-                {
-                    try {
-                        result = new FileInfo(assemblyLocation).LastWriteTime;
-                    }
-                    catch
-                    {
-                    }
-                }
-                else
-                {
-                    result = "0.0.0.1";
-                }
-
-            }
 
             if (result == 0)
             {
@@ -1573,18 +1542,24 @@ namespace Microsoft.PackageManagement.Internal.Implementation
                         {
                             result = new FileInfo(assemblyLocation).LastWriteTime;
                         }
-                        catch
+                        catch (IOException e1)
                         {
+                            Console.WriteLine("Exception caught {0}", e1);
+                        }
+                        catch (PlatformNotSupportedException e2)
+                        {
+                            Console.WriteLine("Exception caught {0}", e2);
+                        }
+                        catch (ArgumentOutOfRangeException e3)
+                        {
+                            Console.WriteLine("Exception caught {0}", e3);
                         }
                     }
                 }
 
-                if (result == 0)
-                {
-                    // still no version?
-                    // I give up. call it 0.0.0.1
-                    result = "0.0.0.1";
-                }
+                // still no version?
+                // I give up. call it 0.0.0.1
+                result = "0.0.0.1";
             }
             return result;
         }
@@ -1794,7 +1769,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         {
             if (_metaProviders.ContainsKey(metaproviderName))
             {
-                var metaProvider = _metaProviders[metaproviderName];
+                IMetaProvider metaProvider = _metaProviders[metaproviderName];
 
                 request.Debug("Using MetaProvider '{0}' to attempt to load provider from '{1}'".format(metaproviderName, providerNameOrPath));
 
@@ -1808,7 +1783,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         {
             request.Debug("Trying to register metaprovider");
             bool found = false;
-            var metaProviderName = provider.GetMetaProviderName();
+            string metaProviderName = provider.GetMetaProviderName();
 
             lock (_metaProviders)
             {
@@ -1838,7 +1813,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         {
             bool found = false;
 
-            var instance = metaProvider.CreateProvider(name);
+            object instance = metaProvider.CreateProvider(name);
             if (instance != null)
             {
                 // check if it's a Package Provider
