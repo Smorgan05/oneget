@@ -91,6 +91,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 #endif
         //return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 
+        // Replaced with private readonly string above
         //internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
 
         internal string[] BootstrappableProviderNames
@@ -1294,6 +1295,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         /// <param name="providerAssemblyName"></param>
         /// <param name="shouldRefreshCache"></param>
         /// <returns></returns>
+        // TODO: Remove Weak Hashing!
         internal bool LoadProviderAssembly(IHostApi request, string providerAssemblyName, bool shouldRefreshCache)
         {
             request.Debug(request.FormatMessageString("Trying provider assembly: {0}", providerAssemblyName));
@@ -1515,11 +1517,41 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             return found;
         }
 
+        // TODO: Simplify This!
         private static FourPartVersion GetAssemblyVersion(Assembly asm)
         {
             FourPartVersion result = 0;
-
             result = asm.GetName().Version;
+
+            if (result == 0)
+            {
+                // what? No assembly version?
+                // fallback to the file version of the assembly
+#if !CORECLR
+                string assemblyLocation = asm.Location;
+#else
+                var assemblyLocation = asm.ManifestModule.FullyQualifiedName;
+#endif
+
+                if (!string.IsNullOrWhiteSpace(assemblyLocation) && File.Exists(assemblyLocation))
+                {
+                    result = FileVersionInfo.GetVersionInfo(assemblyLocation);
+                }
+                else if (result == 0)
+                {
+                    try {
+                        result = new FileInfo(assemblyLocation).LastWriteTime;
+                    }
+                    catch
+                    {
+                    }
+                }
+                else
+                {
+                    result = "0.0.0.1";
+                }
+
+            }
 
             if (result == 0)
             {
