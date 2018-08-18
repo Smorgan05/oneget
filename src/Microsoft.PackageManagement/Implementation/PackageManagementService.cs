@@ -66,9 +66,10 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         internal readonly IDictionary<string, Downloader> Downloaders = new Dictionary<string, Downloader>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, List<PackageProvider>> _providerCacheTable = new Dictionary<string, List<PackageProvider>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, byte[]> _providerFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
-        private string _baseDir;
+        //private string _baseDir;
         internal bool InternalPackageManagementInstallOnly = false;
         private readonly string _nuget = "NuGet";
+        private readonly string BaseDir = Path.GetDirectoryName(CurrentAssemblyLocation);
 
         internal enum ProviderOption
         {
@@ -90,7 +91,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 #endif
         //return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 
-        internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
+        //internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
 
         internal string[] BootstrappableProviderNames
         {
@@ -1159,6 +1160,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         ///     (currently a hardcoded list, soon, registry driven)
         /// </summary>
         /// <param name="request"></param>
+        // TODO: Remove Hard Coding!!!
         internal void LoadProviders(IHostApi request)
         {
             if (request == null)
@@ -1187,6 +1189,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
             // add inbox assemblies (don't require manifests, because they are versioned with the core)
             providerAssemblies = providerAssemblies.Concat(new[] {
+
                 Path.Combine(BaseDir, "Microsoft.PackageManagement.MetaProvider.PowerShell.dll"),
                 Path.Combine(BaseDir, "Microsoft.PackageManagement.ArchiverProviders.dll"),
                 Path.Combine(BaseDir, "Microsoft.PackageManagement.CoreProviders.dll"),
@@ -1365,6 +1368,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         /// <param name="assemblyName"></param>
         /// <param name="request"></param>
         /// <returns></returns>
+        // TODO: Simplify this
         private string FindAssembly(string assemblyName, IHostApi request)
         {
             try
