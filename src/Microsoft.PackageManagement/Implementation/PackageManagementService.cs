@@ -65,7 +65,6 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         internal readonly IDictionary<string, Downloader> Downloaders = new Dictionary<string, Downloader>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, List<PackageProvider>> _providerCacheTable = new Dictionary<string, List<PackageProvider>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, byte[]> _providerFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
-
         //private string _baseDir;
         internal bool InternalPackageManagementInstallOnly = false;
 
@@ -80,20 +79,20 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
         internal Dictionary<string, List<PackageProvider>> ProviderCacheTable => _providerCacheTable;
 
-        //TODO Needs Fixing
+        //TODO: Needs Fixing
         internal static string CurrentAssemblyLocation =>
 
-        //Assembly.GetAssembly(typeof(PackageManagementService)).Location;
-        AppDomain.CurrentDomain.BaseDirectory;
+        //AppDomain.CurrentDomain.BaseDirectory;
 
 #if !CORECLR
+        Assembly.GetAssembly(typeof(PackageManagementService)).Location;
         //Assembly.GetExecutingAssembly().Location;
 #else
         typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 #endif
         //return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 
-        //TODO End of Fixing
+        //TODO: End of Fixing
 
         // Replaced with private readonly string above
         //internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
@@ -255,6 +254,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             return _packageProviders.Values.Where(each => each.Features.ContainsKey(featureName) && each.Features[featureName].Contains(value));
         }
 
+        //TODO: Simplify This!
         public IEnumerable<PackageProvider> SelectProviders(string providerName, IHostApi hostApi)
         {
             if (!string.IsNullOrWhiteSpace(providerName))
@@ -360,6 +360,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             return new SoftwareIdentity[0];
         }
 
+        //TODO: Simplify This!
         public bool RequirePackageProvider(string requestor, string packageProviderName, string minimumVersion, IHostApi hostApi)
         {
             // check if the package provider is already installed
@@ -664,6 +665,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             return Enumerable.Empty<PackageProvider>();
         }
 
+        // TODO: Simplify This!
         private IEnumerable<PackageProvider> ImportPackageProviderViaName(IHostApi request,
             string providerName,
             Version requiredVersion,
@@ -1115,6 +1117,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
         //return the providers with latest version under the providerAssemblies folder
         //This method only gets called during the initialization, i.e. LoadProviders().
+        // TODO: Simplify This!
         private IEnumerable<string> ProvidersWithLatestVersionFromProviderAssembliesLocation(IHostApi request)
         {
             // don't need this for core powershell
@@ -1812,6 +1815,7 @@ namespace Microsoft.PackageManagement.Internal.Implementation
             return found;
         }
 
+        // TODO: Simplify This!
         private bool LoadViaMetaProvider(Providers.IMetaProvider metaProvider, string name, FourPartVersion asmVersion, IHostApi request)
         {
             bool found = false;
