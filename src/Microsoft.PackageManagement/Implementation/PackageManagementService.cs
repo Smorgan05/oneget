@@ -65,7 +65,6 @@ namespace Microsoft.PackageManagement.Internal.Implementation
         internal readonly IDictionary<string, Downloader> Downloaders = new Dictionary<string, Downloader>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, List<PackageProvider>> _providerCacheTable = new Dictionary<string, List<PackageProvider>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, byte[]> _providerFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
-        //private string _baseDir;
         internal bool InternalPackageManagementInstallOnly = false;
 
         private readonly string _nuget = "NuGet";
@@ -79,23 +78,13 @@ namespace Microsoft.PackageManagement.Internal.Implementation
 
         internal Dictionary<string, List<PackageProvider>> ProviderCacheTable => _providerCacheTable;
 
-        //TODO: Needs Fixing
         internal static string CurrentAssemblyLocation =>
-
-        //AppDomain.CurrentDomain.BaseDirectory;
 
 #if !CORECLR
         Assembly.GetAssembly(typeof(PackageManagementService)).Location;
-        //Assembly.GetExecutingAssembly().Location;
 #else
         typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
 #endif
-        //return typeof(PackageManagementService).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
-
-        //TODO: End of Fixing
-
-        // Replaced with private readonly string above
-        //internal string BaseDir => _baseDir ?? (_baseDir = Path.GetDirectoryName(CurrentAssemblyLocation));
 
         internal string[] BootstrappableProviderNames
         {
